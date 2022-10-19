@@ -11,6 +11,7 @@ from os.path import basename, splitext
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from scipy import interpolate, optimize
+import scipy.constants as const
 import pyperclip
 
 
@@ -34,6 +35,7 @@ def main():
     colors = ['b', 'r', 'g', 'y']
     markers = ['o', 'x', 'v', '^']
     sizes = [20, 20, 20, 20]
+    srf = 1
     lr = [0, 0, 0, 0]
     legendf = 1
     gridf = 1
@@ -41,8 +43,10 @@ def main():
     figwidth, figheight = 8, 6
     linef = 0
     lcf = 1
+    normf = 1
+    lat_const = 600e-9
     graph_making(src, dst, title,  legends, colors, ranges, markers, sizes,
-                 reg_range, lr, legendf, gridf, linef, lcf, g_type, figwidth, figheight, xlabel,  ylabel)
+                 reg_range, srf, lr, legendf, gridf, linef, lcf, normf, g_type, figwidth, figheight, xlabel,  ylabel, lat_const)
 
 
 def regression(df, L, reg_range):
@@ -62,14 +66,16 @@ def regression(df, L, reg_range):
 
 
 def graph_making(src, dst, title,  legends, colors, ranges, markers,
-                 sizes, reg_range, lr, legendf=1, gridf=1, linef=1, lcf=1, g_type="None", figwidth=8, figheight=6, xlabel='x',  ylabel='y'):
+                 sizes, reg_range, srf, lr, legendf=1, gridf=1, linef=1, lcf=1, normf=1, g_type="None", figwidth=8, figheight=6, xlabel='x',  ylabel='y', lat_const=600e-9):
     minorticksf = 1
     flag_vline = linef
     flag_leaky = lcf
     file_path = src
     font_size = 15
-    # df = read_csv(file_path, encoding='utf-8', header=0, index_col=None)
-    df = read_clipboard(header=0, index_col=None)
+    if srf:
+        df = read_csv(file_path, encoding='utf-8', header=0, index_col=None)
+    else:
+        df = read_clipboard(header=0, index_col=None)
     # L = len(df.columns) - 1
     L = len(df.columns) // 2
     print(df, "\n", L)
@@ -79,6 +85,13 @@ def graph_making(src, dst, title,  legends, colors, ranges, markers,
         name.append(f'y{i}')
     print(name)
     df.columns = name
+
+    # ------
+    if not normf:
+        lattice_constant = 600e-9
+        for i in range(L):
+            df[f'y{i}'] = df[f'y{i}']*const.c/lat_const
+    # ------
 
     # tick bar : in
     plt.rcParams['xtick.direction'] = 'in'

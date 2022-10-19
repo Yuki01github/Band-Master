@@ -184,7 +184,7 @@ class Application(tk.Frame):
         label_xaxis = tk.Label(self.master, text="x軸ラベル", width=7)
         label_yaxis = tk.Label(self.master, text="y軸ラベル", width=7)
         label_title = tk.Label(self.master, text="グラフタイトル")
-        label_input = tk.Label(self.master, text="ソース", width=7)
+        # label_input = tk.Label(self.master, text="ソース", width=7)
         label_output = tk.Label(self.master, text="保存先", width=7)
         label_gtype = tk.Label(self.master, text="構造", width=3)
         label_gsize = tk.Label(self.master, text="比率", width=3)
@@ -269,6 +269,10 @@ class Application(tk.Frame):
         self.entry_output = ttk.Entry(self.master, justify=tk.LEFT, width=55)
         self.entry_output.insert(
             tk.END, self.config.get('path', 'dst'))
+        self.label_lat_const = tk.Label(self.master, text="格子定数〔m〕", width=10)
+        self.entry_lat_const = ttk.Entry(
+            self.master, justify=tk.LEFT, width=7)
+        self.entry_lat_const.insert(tk.END, 600e-9)
 
         # ------ボタンの設定-----
         self.button_run = ttk.Button(self.master, text="RUN",
@@ -304,6 +308,15 @@ class Application(tk.Frame):
             self.bln_legendflag.set(True)
         self.chk_lightcone = ttk.Checkbutton(
             self.master, variable=self.bln_lightcone, text="Leaky領域")
+        self.bln_norm = tk.BooleanVar()
+        self.bln_norm.set(True)
+        self.chk_norm = ttk.Checkbutton(
+            self.master, variable=self.bln_norm, text="正規化")
+        self.bln_src = tk.BooleanVar()
+        if self.config.get("values", "srf") == 'True':
+            self.bln_src.set(True)
+        self.chk_src = ttk.Checkbutton(
+            self.master, variable=self.bln_src, text="ソース")
 
         self.gtype = tk.StringVar()
         self.gtype_menu = ttk.Combobox(
@@ -416,9 +429,12 @@ class Application(tk.Frame):
         self.gsize_menu.place(x="15.2cm", y="11.5cm")
         self.chk_line.place(x="13.5cm", y="10.38cm")
         self.chk_lightcone.place(x="13.5cm", y="10.9cm")
+        self.chk_norm.place(x="15.7 cm", y="10.38cm")
+        self.label_lat_const.place(x="17.3cm", y="10.38cm")
+        self.entry_lat_const.place(x="19.3 cm", y="10.38cm")
         label_title.grid(row=16, column=1)
         self.entry_title.grid(row=16, column=2, columnspan=5)
-        label_input.grid(row=17, column=1)
+        self.chk_src.grid(row=17, column=1)
         self.entry_input.grid(row=17, column=2, columnspan=5)
         label_output.grid(row=18, column=1)
         self.entry_output.grid(row=18, column=2, columnspan=5)
@@ -471,11 +487,14 @@ class Application(tk.Frame):
                                                     self.entry2_6, self.entry3_6, self.entry4_6]]
             reg_range = [[item[0].get(), item[1].get()] for item in [[self.entry1_3, self.entry1_4], [self.entry2_3,
                                                                                                       self.entry2_4], [self.entry3_3, self.entry3_4], [self.entry4_3, self.entry4_4]]]
+            lat_const = float(self.entry_lat_const.get())
 
+            srf = int(self.bln_src.get())
             lr = [int(self.bln_lr[i].get()) for i in range(4)]
             legendf = int(self.bln_legendflag.get())
 
             gridf = int(self.bln_gridflag.get())
+            normf = int(self.bln_norm.get())
             g_type = self.gtype.get()
             strings = self.gsize.get()
             idx = strings.find("x")
@@ -484,7 +503,7 @@ class Application(tk.Frame):
             lcf = int(self.bln_lightcone.get())
 
             reg_params = GM.graph_making(src, dst, title, legends, colors, ranges,
-                                         markers, sizes,  reg_range, lr, legendf, gridf, linef, lcf, g_type, figwidth, figheight, xlabel, ylabel)
+                                         markers, sizes,  reg_range, srf, lr, legendf, gridf, linef, lcf, normf, g_type, figwidth, figheight, xlabel, ylabel, lat_const)
 
             for i in range(4):
                 if lr[i]:
